@@ -1,7 +1,7 @@
 const API_BASE_URL = (
   import.meta.env.VITE_API_BASE_URL || 
   'https://website-reservasi-restoran-nb15.vercel.app'
-).replace(/\/$/, '');
+).replace(/\/$/, '') + '/api';
 
 async function request(path, options = {}) {
   const token = localStorage.getItem('restokalcer_token');
