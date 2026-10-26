@@ -1,30 +1,21 @@
 const { Pool } = require('pg');
 const bcrypt = require('bcryptjs');
 
-// Menggunakan SSL secara default di Production / Cloud Vercel
-const isProduction = process.env.NODE_ENV === 'production' || process.env.VERCEL;
-
+// Vercel / Supabase mewajibkan SSL dengan rejectUnauthorized: false
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
-    ssl: isProduction || process.env.DATABASE_SSL === 'true' 
-        ? { rejectUnauthorized: false } 
-        : false,
+    ssl: { rejectUnauthorized: false },
     max: Number(process.env.DB_POOL_MAX || 10),
 });
 
 async function initializeDatabase() {
-    // Validasi aman di dalam fungsi agar tidak membuat crash saat file pertama di-require
     if (!process.env.DATABASE_URL) {
-        console.error('DATABASE_URL belum dikonfigurasi di Environment Variables.');
+        console.error('DATABASE_URL tidak ditemukan');
         return;
     }
 
-    if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
-        console.warn('PERINGATAN: JWT_SECRET belum diatur atau kurang dari 32 karakter.');
-    }
-
     try {
-        await pool.query('CREATE EXTENSION IF NOT EXISTS btree_gist');
+        // Buat tabel utama tanpa melempar error btree_gist jika tidak ada izin di Supabase
         await pool.query(`
             CREATE TABLE IF NOT EXISTS users (
                 id BIGSERIAL PRIMARY KEY,
@@ -61,42 +52,6 @@ async function initializeDatabase() {
                 updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
                 CHECK (end_time > start_time)
             );
-
-            CREATE INDEX IF NOT EXISTS reservations_table_schedule_idx
-                ON reservations (table_id, reservation_date, start_time, end_time);
-            CREATE INDEX IF NOT EXISTS reservations_user_idx ON reservations (user_id);
-        `);
-
-        await pool.query(`
-            ALTER TABLE restaurant_tables
-            ADD COLUMN IF NOT EXISTS manual_status INTEGER NOT NULL DEFAULT 0;
-        `);
-
-        await pool.query(`
-            ALTER TABLE reservations
-            ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
-        `);
-
-        await pool.query(`
-            DO $$
-            BEGIN
-                IF NOT EXISTS (
-                    SELECT 1 FROM pg_constraint
-                    WHERE conname = 'reservations_no_active_overlap'
-                ) THEN
-                    ALTER TABLE reservations
-                    ADD CONSTRAINT reservations_no_active_overlap
-                    EXCLUDE USING gist (
-                        table_id WITH =,
-                        tsrange(
-                            (reservation_date + start_time)::timestamp,
-                            (reservation_date + end_time)::timestamp,
-                            '[)'
-                        ) WITH &&
-                    )
-                    WHERE (status IN ('pending', 'confirmed', 'seated'));
-                END IF;
-            END $$;
         `);
 
         await pool.query(`
@@ -115,9 +70,9 @@ async function initializeDatabase() {
                 [process.env.ADMIN_USERNAME.trim().toLowerCase(), passwordHash],
             );
         }
-        console.log('Inisialisasi Database Supabase berhasil!');
+        console.log('Database terhubung & terinisialisasi.');
     } catch (err) {
-        console.error('Error saat inisialisasi tabel database:', err.message);
+        console.error('Database Init Error:', err.message);
     }
 }
 
