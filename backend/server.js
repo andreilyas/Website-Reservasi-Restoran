@@ -45,8 +45,13 @@ app.use(cors({
     optionsSuccessStatus: 204,
 }));
 
-// Menangani Preflight Request secara eksplisit
-app.options('*', cors());
+// Tambahkan ini tepat sebelum rute app.use('/api/auth', authRoutes);
+app.options('*', (req, res) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.sendStatus(204);
+});
 
 app.use(express.json({ limit: '100kb' }));
 
