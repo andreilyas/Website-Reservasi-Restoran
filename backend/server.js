@@ -11,14 +11,19 @@ const { initializeDatabase } = require('./src/db');
 const app = express();
 const PORT = Number(process.env.PORT || 5000);
 
+// Inisialisasi Database agar berjalan baik di Vercel maupun Local
+initializeDatabase().catch((error) => {
+    console.error('Gagal menginisialisasi database:', error.message);
+});
+
 const configuredOrigins = (process.env.FRONTEND_ORIGIN || '')
     .split(',')
     .map((origin) => origin.trim())
     .filter(Boolean);
 
 const allowedOrigins = [
-    'https://website-reservasi-restoran.vercel.app',    // Domain Frontend Vercel
-    'https://website-reservasi-restoran-nb15.vercel.app', // Domain Backend Vercel
+    'https://website-reservasi-restoran.vercel.app',
+    'https://website-reservasi-restoran-nb15.vercel.app',
     'http://localhost:5173',
     'http://localhost:3000',
     ...configuredOrigins,
@@ -26,7 +31,7 @@ const allowedOrigins = [
 
 const allowAllOrigins = allowedOrigins.includes('*');
 
-// Konfigurasi Helmet agar mengizinkan Cross-Origin Resource Sharing
+// Konfigurasi Helmet untuk Cross-Origin
 app.use(helmet({
     crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
@@ -34,7 +39,6 @@ app.use(helmet({
 // Middleware CORS
 app.use(cors({
     origin: (origin, callback) => {
-        // Izinkan request tanpa origin (seperti dari Mobile App/Postman) atau jika origin terdaftar/wildcard
         if (!origin || allowAllOrigins || allowedOrigins.includes(origin)) {
             return callback(null, true);
         }
@@ -45,7 +49,7 @@ app.use(cors({
     optionsSuccessStatus: 204,
 }));
 
-// Tambahkan ini tepat sebelum rute app.use('/api/auth', authRoutes);
+// Preflight Request Handler
 app.options('*', (req, res) => {
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
@@ -62,15 +66,18 @@ app.use(rateLimit({
     legacyHeaders: false,
 }));
 
+// Health Check & Test Endpoint
 app.get('/health/live', (req, res) => res.status(200).json({ status: 'ok' }));
+app.get('/api/test', (req, res) => res.json({ message: 'Serverless backend Vercel aktif!' }));
 
-// Izinkan rute diakses via /api/reservasi ATAU /reservasi
+// Pendaftaran Rute Dual-Prefix
 app.use('/api/auth', authRoutes);
 app.use('/auth', authRoutes);
 
 app.use('/api/reservasi', reservasiRoutes);
 app.use('/reservasi', reservasiRoutes);
 
+// Fallback 404 Handler
 app.use((req, res) => {
     res.status(404).json({
         success: false,
@@ -78,6 +85,7 @@ app.use((req, res) => {
     });
 });
 
+// Error Handler
 app.use((error, req, res, next) => {
     if (res.headersSent) return next(error);
 
@@ -88,28 +96,21 @@ app.use((error, req, res, next) => {
         });
     }
 
-    if (process.env.NODE_ENV !== 'production') {
-        console.error(error);
-    }
+    console.error('Server Error:', error);
 
     return res.status(500).json({
         success: false,
         message: 'Terjadi kesalahan internal server.',
+        error: process.env.NODE_ENV !== 'production' ? error.message : undefined
     });
 });
 
-async function startServer() {
-    await initializeDatabase();
-    return app.listen(PORT, () => {
+// Jalankan app.listen hanya jika di lingkungan lokal
+if (require.main === module) {
+    app.listen(PORT, () => {
         console.log(`Server berhasil berjalan di http://localhost:${PORT}`);
     });
 }
 
-if (require.main === module) {
-    startServer().catch((error) => {
-        console.error('Gagal memulai server:', error.message);
-        process.exitCode = 1;
-    });
-}
-
-module.exports = { app, startServer };
+// Ekspor langsung app untuk Vercel Serverless Function
+module.exports = app;
