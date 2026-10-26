@@ -64,8 +64,12 @@ app.use(rateLimit({
 
 app.get('/health/live', (req, res) => res.status(200).json({ status: 'ok' }));
 
+// Izinkan rute diakses via /api/reservasi ATAU /reservasi
 app.use('/api/auth', authRoutes);
+app.use('/auth', authRoutes);
+
 app.use('/api/reservasi', reservasiRoutes);
+app.use('/reservasi', reservasiRoutes);
 
 app.use((req, res) => {
     res.status(404).json({
