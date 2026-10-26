@@ -7,6 +7,7 @@ import AdminDashboard from './components/AdminDashboard';
 import Toast from './components/Toast';
 import { getTables } from './services/api';
 import { useBooking } from './hooks/useBooking';
+import heroImage from './assets/hero.png';
 import './App.css';
 
 function App() {
@@ -120,7 +121,7 @@ function App() {
             </div>
             <div className="hero-card" aria-label="Informasi operasional restoran">
               <div className="hero-card-image">
-                <img src="/src/assets/hero.png" alt="Suasana meja restoran RestoKalcer" />
+                <img src={heroImage} alt="Suasana meja restoran RestoKalcer" />
                 <span className="floating-badge">✦ Favorit pelanggan</span>
               </div>
               <div className="hero-card-body">
