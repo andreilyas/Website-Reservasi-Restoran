@@ -1,3 +1,9 @@
+try {
+    require('dotenv').config();
+} catch (error) {
+    // Abaikan error dotenv di lingkungan Vercel
+}
+
 require('dotenv').config();
 
 const express = require('express');
