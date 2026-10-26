@@ -1,11 +1,3 @@
-try {
-    require('dotenv').config();
-} catch (error) {
-    // Abaikan error dotenv di lingkungan Vercel
-}
-
-require('dotenv').config();
-
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
