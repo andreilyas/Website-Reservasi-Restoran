@@ -10,31 +10,46 @@ const { initializeDatabase } = require('./src/db');
 
 const app = express();
 const PORT = Number(process.env.PORT || 5000);
+
 const configuredOrigins = (process.env.FRONTEND_ORIGIN || '')
     .split(',')
     .map((origin) => origin.trim())
     .filter(Boolean);
+
 const allowedOrigins = [
-    'https://website-reservasi-restoran-nb15.vercel.app',
+    'https://website-reservasi-restoran.vercel.app',    // Domain Frontend Vercel
+    'https://website-reservasi-restoran-nb15.vercel.app', // Domain Backend Vercel
     'http://localhost:5173',
+    'http://localhost:3000',
     ...configuredOrigins,
 ].filter((origin, index, origins) => origins.indexOf(origin) === index);
+
 const allowAllOrigins = allowedOrigins.includes('*');
 
-app.use(helmet());
+// Konfigurasi Helmet agar mengizinkan Cross-Origin Resource Sharing
+app.use(helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
+
+// Middleware CORS
 app.use(cors({
     origin: (origin, callback) => {
+        // Izinkan request tanpa origin (seperti dari Mobile App/Postman) atau jika origin terdaftar/wildcard
         if (!origin || allowAllOrigins || allowedOrigins.includes(origin)) {
             return callback(null, true);
         }
-
         return callback(new Error('Origin tidak diizinkan oleh kebijakan CORS.'));
     },
     methods: ['GET', 'HEAD', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     optionsSuccessStatus: 204,
 }));
+
+// Menangani Preflight Request secara eksplisit
+app.options('*', cors());
+
 app.use(express.json({ limit: '100kb' }));
+
 app.use(rateLimit({
     windowMs: 15 * 60 * 1000,
     limit: 100,
@@ -43,6 +58,7 @@ app.use(rateLimit({
 }));
 
 app.get('/health/live', (req, res) => res.status(200).json({ status: 'ok' }));
+
 app.use('/api/auth', authRoutes);
 app.use('/api/reservasi', reservasiRoutes);
 
