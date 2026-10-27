@@ -103,6 +103,10 @@ npm start
 Schema dan seed meja dibuat saat startup. Alternatifnya, jalankan
 `backend/postgres.sql` melalui pgAdmin atau PostgreSQL CLI.
 
+Pada deployment Vercel, pastikan `DATABASE_URL` sudah diatur di Project
+Settings. API akan menunggu inisialisasi schema selesai sebelum memproses
+request pertama.
+
 ### Frontend
 
 ```bash

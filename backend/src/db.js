@@ -8,10 +8,23 @@ const pool = new Pool({
     max: Number(process.env.DB_POOL_MAX || 10),
 });
 
+let initializationPromise;
+
 async function initializeDatabase() {
+    if (initializationPromise) return initializationPromise;
+
+    initializationPromise = setupDatabase();
+    try {
+        await initializationPromise;
+    } catch (error) {
+        initializationPromise = undefined;
+        throw error;
+    }
+}
+
+async function setupDatabase() {
     if (!process.env.DATABASE_URL) {
-        console.error('DATABASE_URL tidak ditemukan');
-        return;
+        throw new Error('DATABASE_URL tidak ditemukan');
     }
 
     try {
@@ -73,6 +86,7 @@ async function initializeDatabase() {
         console.log('Database terhubung & terinisialisasi.');
     } catch (err) {
         console.error('Database Init Error:', err.message);
+        throw err;
     }
 }
 

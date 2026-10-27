@@ -9,11 +9,6 @@ const { initializeDatabase } = require('./src/db');
 const app = express();
 const PORT = Number(process.env.PORT || 5000);
 
-// Inisialisasi Database agar berjalan baik di Vercel maupun Local
-initializeDatabase().catch((error) => {
-    console.error('Gagal menginisialisasi database:', error.message);
-});
-
 const configuredOrigins = (process.env.FRONTEND_ORIGIN || '')
     .split(',')
     .map((origin) => origin.trim())
@@ -105,9 +100,16 @@ app.use((error, req, res, next) => {
 
 // Jalankan app.listen hanya jika di lingkungan lokal
 if (require.main === module) {
-    app.listen(PORT, () => {
-        console.log(`Server berhasil berjalan di http://localhost:${PORT}`);
-    });
+    initializeDatabase()
+        .then(() => {
+            app.listen(PORT, () => {
+                console.log(`Server berhasil berjalan di http://localhost:${PORT}`);
+            });
+        })
+        .catch((error) => {
+            console.error('Gagal menginisialisasi database:', error.message);
+            process.exitCode = 1;
+        });
 }
 
 // Ekspor langsung app untuk Vercel Serverless Function
