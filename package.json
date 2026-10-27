@@ -6,5 +6,24 @@
     "express-rate-limit": "^8.7.1",
     "helmet": "^8.3.0",
     "pg": "^8.23.1"
-  }
+  },
+  "name": "swf",
+  "version": "1.0.0",
+  "description": "RestoKalcer adalah platform web full-stack untuk membantu pelanggan melakukan\r reservasi meja restoran secara online dan membantu manajemen restoran mengelola\r ketersediaan meja serta reservasi secara efisien.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/andreilyas/Website-Reservasi-Restoran.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/andreilyas/Website-Reservasi-Restoran/issues"
+  },
+  "homepage": "https://github.com/andreilyas/Website-Reservasi-Restoran#readme"
 }
