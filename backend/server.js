@@ -7,6 +7,7 @@ const reservasiRoutes = require('./src/routes/reservasiRoutes');
 const { initializeDatabase } = require('./src/db');
 
 const app = express();
+app.set('trust proxy', 1);
 const PORT = Number(process.env.PORT || 5000);
 
 const configuredOrigins = (process.env.FRONTEND_ORIGIN || '')
