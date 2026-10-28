@@ -1,13 +1,18 @@
 const { Pool } = require('pg');
 
+const isSslDisabled = process.env.DATABASE_SSL === 'false';
+const sslConfig = isSslDisabled ? false : { rejectUnauthorized: false };
+
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
-    ssl: {
-        rejectUnauthorized: false
-    },
+    ssl: sslConfig,
     connectionTimeoutMillis: 10000,
     idleTimeoutMillis: 30000,
-    max: 10,
+    max: Number(process.env.DB_POOL_MAX || 10),
+});
+
+pool.on('error', (err) => {
+    console.error('Unexpected error on idle PostgreSQL client:', err.message);
 });
 
 async function initializeDatabase() {

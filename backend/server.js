@@ -62,6 +62,7 @@ app.use(rateLimit({
 
 // Health Check & Test Endpoint
 app.get('/health/live', (req, res) => res.status(200).json({ status: 'ok' }));
+app.get('/api/health/live', (req, res) => res.status(200).json({ status: 'ok' }));
 app.get('/api/test', (req, res) => res.json({ message: 'Serverless backend Vercel aktif!' }));
 
 // Pendaftaran Rute Dual-Prefix
@@ -113,5 +114,6 @@ if (require.main === module) {
         });
 }
 
-// Ekspor langsung app untuk Vercel Serverless Function
+// Ekspor app (dan alias properti app) untuk fleksibilitas import CommonJS
+app.app = app;
 module.exports = app;
